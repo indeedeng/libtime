@@ -1,5 +1,6 @@
 libtime
 =======
+![OSS Lifecycle](https://img.shields.io/osslifecycle/indeedeng/libtime.svg)
 
 # Project Overview
 
