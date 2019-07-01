@@ -1,4 +1,4 @@
-package libtime
+package libtime // import "oss.indeed.com/go/libtime"
 
 import "time"
 

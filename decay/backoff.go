@@ -1,5 +1,5 @@
 // Package decay provides a generalized exponential backoff retry implementation.
-package decay
+package decay // import "oss.indeed.com/go/libtime/decay"
 
 import (
 	"math/rand"
