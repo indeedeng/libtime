@@ -1,6 +1,11 @@
 libtime
 =======
-![OSS Lifecycle](https://img.shields.io/osslifecycle/indeedeng/libtime.svg)
+
+[![Go Report Card](https://goreportcard.com/badge/oss.indeed.com/go/libtime)](https://goreportcard.com/report/oss.indeed.com/go/libtime)
+[![Build Status](https://travis-ci.com/indeedeng/libtime.svg?branch=master)](https://travis-ci.com/indeedeng/libtime)
+[![GoDoc](https://godoc.org/oss.indeed.com/go/libtime?status.svg)](https://godoc.org/oss.indeed.com/go/libtime)
+[![NetflixOSS Lifecycle](https://img.shields.io/osslifecycle/indeedeng/libtime.svg)](OSSMETADATA)
+[![GitHub](https://img.shields.io/github/license/indeedeng/libtime.svg)](LICENSE)
 
 # Project Overview
 
