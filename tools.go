@@ -3,5 +3,5 @@
 package libtime
 
 import (
-	_ "github.com/gojuno/minimock"
+	_ "github.com/gojuno/minimock/v3"
 )

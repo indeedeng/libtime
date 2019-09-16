@@ -2,7 +2,7 @@ package libtime // import "oss.indeed.com/go/libtime"
 
 import "time"
 
-//go:generate go run github.com/gojuno/minimock/cmd/minimock -g -i Clock -s _mock.go
+//go:generate go run github.com/gojuno/minimock/v3/cmd/minimock -g -i Clock -s _mock.go
 
 // Clock provides a mock-able interface of some of the standard library time
 // package functions, like time.Now and time.Since. A default implementation is
