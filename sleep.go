@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-//go:generate go run github.com/gojuno/minimock/cmd/minimock -g -i Sleeper -s _mock.go
+//go:generate go run github.com/gojuno/minimock/v3/cmd/minimock -g -i Sleeper -s _mock.go
 
 // A Sleeper is a useful way for calling time.Sleep
 // in a mockable way for tests.

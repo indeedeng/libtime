@@ -8,7 +8,7 @@ import (
 	"time"
 	mm_time "time"
 
-	"github.com/gojuno/minimock"
+	"github.com/gojuno/minimock/v3"
 )
 
 // ClockMock implements Clock
@@ -16,16 +16,19 @@ type ClockMock struct {
 	t minimock.Tester
 
 	funcNow          func() (t1 time.Time)
+	inspectFuncNow   func()
 	afterNowCounter  uint64
 	beforeNowCounter uint64
 	NowMock          mClockMockNow
 
 	funcSince          func(t1 time.Time) (d1 time.Duration)
+	inspectFuncSince   func(t1 time.Time)
 	afterSinceCounter  uint64
 	beforeSinceCounter uint64
 	SinceMock          mClockMockSince
 
 	funcSinceMS          func(t1 time.Time) (i1 int)
+	inspectFuncSinceMS   func(t1 time.Time)
 	afterSinceMSCounter  uint64
 	beforeSinceMSCounter uint64
 	SinceMSMock          mClockMockSinceMS
@@ -81,6 +84,17 @@ func (mmNow *mClockMockNow) Expect() *mClockMockNow {
 	return mmNow
 }
 
+// Inspect accepts an inspector function that has same arguments as the Clock.Now
+func (mmNow *mClockMockNow) Inspect(f func()) *mClockMockNow {
+	if mmNow.mock.inspectFuncNow != nil {
+		mmNow.mock.t.Fatalf("Inspect function is already set for ClockMock.Now")
+	}
+
+	mmNow.mock.inspectFuncNow = f
+
+	return mmNow
+}
+
 // Return sets up results that will be returned by Clock.Now
 func (mmNow *mClockMockNow) Return(t1 time.Time) *ClockMock {
 	if mmNow.mock.funcNow != nil {
@@ -113,14 +127,18 @@ func (mmNow *ClockMock) Now() (t1 time.Time) {
 	mm_atomic.AddUint64(&mmNow.beforeNowCounter, 1)
 	defer mm_atomic.AddUint64(&mmNow.afterNowCounter, 1)
 
+	if mmNow.inspectFuncNow != nil {
+		mmNow.inspectFuncNow()
+	}
+
 	if mmNow.NowMock.defaultExpectation != nil {
 		mm_atomic.AddUint64(&mmNow.NowMock.defaultExpectation.Counter, 1)
 
-		results := mmNow.NowMock.defaultExpectation.results
-		if results == nil {
+		mm_results := mmNow.NowMock.defaultExpectation.results
+		if mm_results == nil {
 			mmNow.t.Fatal("No results are set for the ClockMock.Now")
 		}
-		return (*results).t1
+		return (*mm_results).t1
 	}
 	if mmNow.funcNow != nil {
 		return mmNow.funcNow()
@@ -224,6 +242,17 @@ func (mmSince *mClockMockSince) Expect(t1 time.Time) *mClockMockSince {
 	return mmSince
 }
 
+// Inspect accepts an inspector function that has same arguments as the Clock.Since
+func (mmSince *mClockMockSince) Inspect(f func(t1 time.Time)) *mClockMockSince {
+	if mmSince.mock.inspectFuncSince != nil {
+		mmSince.mock.t.Fatalf("Inspect function is already set for ClockMock.Since")
+	}
+
+	mmSince.mock.inspectFuncSince = f
+
+	return mmSince
+}
+
 // Return sets up results that will be returned by Clock.Since
 func (mmSince *mClockMockSince) Return(d1 time.Duration) *ClockMock {
 	if mmSince.mock.funcSince != nil {
@@ -277,15 +306,19 @@ func (mmSince *ClockMock) Since(t1 time.Time) (d1 time.Duration) {
 	mm_atomic.AddUint64(&mmSince.beforeSinceCounter, 1)
 	defer mm_atomic.AddUint64(&mmSince.afterSinceCounter, 1)
 
-	params := &ClockMockSinceParams{t1}
+	if mmSince.inspectFuncSince != nil {
+		mmSince.inspectFuncSince(t1)
+	}
+
+	mm_params := &ClockMockSinceParams{t1}
 
 	// Record call args
 	mmSince.SinceMock.mutex.Lock()
-	mmSince.SinceMock.callArgs = append(mmSince.SinceMock.callArgs, params)
+	mmSince.SinceMock.callArgs = append(mmSince.SinceMock.callArgs, mm_params)
 	mmSince.SinceMock.mutex.Unlock()
 
 	for _, e := range mmSince.SinceMock.expectations {
-		if minimock.Equal(e.params, params) {
+		if minimock.Equal(e.params, mm_params) {
 			mm_atomic.AddUint64(&e.Counter, 1)
 			return e.results.d1
 		}
@@ -293,17 +326,17 @@ func (mmSince *ClockMock) Since(t1 time.Time) (d1 time.Duration) {
 
 	if mmSince.SinceMock.defaultExpectation != nil {
 		mm_atomic.AddUint64(&mmSince.SinceMock.defaultExpectation.Counter, 1)
-		want := mmSince.SinceMock.defaultExpectation.params
-		got := ClockMockSinceParams{t1}
-		if want != nil && !minimock.Equal(*want, got) {
-			mmSince.t.Errorf("ClockMock.Since got unexpected parameters, want: %#v, got: %#v%s\n", *want, got, minimock.Diff(*want, got))
+		mm_want := mmSince.SinceMock.defaultExpectation.params
+		mm_got := ClockMockSinceParams{t1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmSince.t.Errorf("ClockMock.Since got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
 
-		results := mmSince.SinceMock.defaultExpectation.results
-		if results == nil {
+		mm_results := mmSince.SinceMock.defaultExpectation.results
+		if mm_results == nil {
 			mmSince.t.Fatal("No results are set for the ClockMock.Since")
 		}
-		return (*results).d1
+		return (*mm_results).d1
 	}
 	if mmSince.funcSince != nil {
 		return mmSince.funcSince(t1)
@@ -424,6 +457,17 @@ func (mmSinceMS *mClockMockSinceMS) Expect(t1 time.Time) *mClockMockSinceMS {
 	return mmSinceMS
 }
 
+// Inspect accepts an inspector function that has same arguments as the Clock.SinceMS
+func (mmSinceMS *mClockMockSinceMS) Inspect(f func(t1 time.Time)) *mClockMockSinceMS {
+	if mmSinceMS.mock.inspectFuncSinceMS != nil {
+		mmSinceMS.mock.t.Fatalf("Inspect function is already set for ClockMock.SinceMS")
+	}
+
+	mmSinceMS.mock.inspectFuncSinceMS = f
+
+	return mmSinceMS
+}
+
 // Return sets up results that will be returned by Clock.SinceMS
 func (mmSinceMS *mClockMockSinceMS) Return(i1 int) *ClockMock {
 	if mmSinceMS.mock.funcSinceMS != nil {
@@ -477,15 +521,19 @@ func (mmSinceMS *ClockMock) SinceMS(t1 time.Time) (i1 int) {
 	mm_atomic.AddUint64(&mmSinceMS.beforeSinceMSCounter, 1)
 	defer mm_atomic.AddUint64(&mmSinceMS.afterSinceMSCounter, 1)
 
-	params := &ClockMockSinceMSParams{t1}
+	if mmSinceMS.inspectFuncSinceMS != nil {
+		mmSinceMS.inspectFuncSinceMS(t1)
+	}
+
+	mm_params := &ClockMockSinceMSParams{t1}
 
 	// Record call args
 	mmSinceMS.SinceMSMock.mutex.Lock()
-	mmSinceMS.SinceMSMock.callArgs = append(mmSinceMS.SinceMSMock.callArgs, params)
+	mmSinceMS.SinceMSMock.callArgs = append(mmSinceMS.SinceMSMock.callArgs, mm_params)
 	mmSinceMS.SinceMSMock.mutex.Unlock()
 
 	for _, e := range mmSinceMS.SinceMSMock.expectations {
-		if minimock.Equal(e.params, params) {
+		if minimock.Equal(e.params, mm_params) {
 			mm_atomic.AddUint64(&e.Counter, 1)
 			return e.results.i1
 		}
@@ -493,17 +541,17 @@ func (mmSinceMS *ClockMock) SinceMS(t1 time.Time) (i1 int) {
 
 	if mmSinceMS.SinceMSMock.defaultExpectation != nil {
 		mm_atomic.AddUint64(&mmSinceMS.SinceMSMock.defaultExpectation.Counter, 1)
-		want := mmSinceMS.SinceMSMock.defaultExpectation.params
-		got := ClockMockSinceMSParams{t1}
-		if want != nil && !minimock.Equal(*want, got) {
-			mmSinceMS.t.Errorf("ClockMock.SinceMS got unexpected parameters, want: %#v, got: %#v%s\n", *want, got, minimock.Diff(*want, got))
+		mm_want := mmSinceMS.SinceMSMock.defaultExpectation.params
+		mm_got := ClockMockSinceMSParams{t1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmSinceMS.t.Errorf("ClockMock.SinceMS got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
 
-		results := mmSinceMS.SinceMSMock.defaultExpectation.results
-		if results == nil {
+		mm_results := mmSinceMS.SinceMSMock.defaultExpectation.results
+		if mm_results == nil {
 			mmSinceMS.t.Fatal("No results are set for the ClockMock.SinceMS")
 		}
-		return (*results).i1
+		return (*mm_results).i1
 	}
 	if mmSinceMS.funcSinceMS != nil {
 		return mmSinceMS.funcSinceMS(t1)

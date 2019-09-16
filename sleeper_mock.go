@@ -8,7 +8,7 @@ import (
 	"time"
 	mm_time "time"
 
-	"github.com/gojuno/minimock"
+	"github.com/gojuno/minimock/v3"
 )
 
 // SleeperMock implements Sleeper
@@ -16,6 +16,7 @@ type SleeperMock struct {
 	t minimock.Tester
 
 	funcSleep          func(d1 time.Duration)
+	inspectFuncSleep   func(d1 time.Duration)
 	afterSleepCounter  uint64
 	beforeSleepCounter uint64
 	SleepMock          mSleeperMockSleep
@@ -76,6 +77,17 @@ func (mmSleep *mSleeperMockSleep) Expect(d1 time.Duration) *mSleeperMockSleep {
 	return mmSleep
 }
 
+// Inspect accepts an inspector function that has same arguments as the Sleeper.Sleep
+func (mmSleep *mSleeperMockSleep) Inspect(f func(d1 time.Duration)) *mSleeperMockSleep {
+	if mmSleep.mock.inspectFuncSleep != nil {
+		mmSleep.mock.t.Fatalf("Inspect function is already set for SleeperMock.Sleep")
+	}
+
+	mmSleep.mock.inspectFuncSleep = f
+
+	return mmSleep
+}
+
 // Return sets up results that will be returned by Sleeper.Sleep
 func (mmSleep *mSleeperMockSleep) Return() *SleeperMock {
 	if mmSleep.mock.funcSleep != nil {
@@ -108,15 +120,19 @@ func (mmSleep *SleeperMock) Sleep(d1 time.Duration) {
 	mm_atomic.AddUint64(&mmSleep.beforeSleepCounter, 1)
 	defer mm_atomic.AddUint64(&mmSleep.afterSleepCounter, 1)
 
-	params := &SleeperMockSleepParams{d1}
+	if mmSleep.inspectFuncSleep != nil {
+		mmSleep.inspectFuncSleep(d1)
+	}
+
+	mm_params := &SleeperMockSleepParams{d1}
 
 	// Record call args
 	mmSleep.SleepMock.mutex.Lock()
-	mmSleep.SleepMock.callArgs = append(mmSleep.SleepMock.callArgs, params)
+	mmSleep.SleepMock.callArgs = append(mmSleep.SleepMock.callArgs, mm_params)
 	mmSleep.SleepMock.mutex.Unlock()
 
 	for _, e := range mmSleep.SleepMock.expectations {
-		if minimock.Equal(e.params, params) {
+		if minimock.Equal(e.params, mm_params) {
 			mm_atomic.AddUint64(&e.Counter, 1)
 			return
 		}
@@ -124,10 +140,10 @@ func (mmSleep *SleeperMock) Sleep(d1 time.Duration) {
 
 	if mmSleep.SleepMock.defaultExpectation != nil {
 		mm_atomic.AddUint64(&mmSleep.SleepMock.defaultExpectation.Counter, 1)
-		want := mmSleep.SleepMock.defaultExpectation.params
-		got := SleeperMockSleepParams{d1}
-		if want != nil && !minimock.Equal(*want, got) {
-			mmSleep.t.Errorf("SleeperMock.Sleep got unexpected parameters, want: %#v, got: %#v%s\n", *want, got, minimock.Diff(*want, got))
+		mm_want := mmSleep.SleepMock.defaultExpectation.params
+		mm_got := SleeperMockSleepParams{d1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmSleep.t.Errorf("SleeperMock.Sleep got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
 
 		return
