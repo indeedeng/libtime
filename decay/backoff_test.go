@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"oss.indeed.com/go/libtime"
+	"oss.indeed.com/go/libtime/libtimetest"
 )
 
 var (
@@ -75,7 +75,7 @@ func Test_backoff_bad_MaxJitterSize_large(t *testing.T) {
 }
 
 func Test_Backoff_first_success(t *testing.T) {
-	sleeper := libtime.NewSleeperMock(t)
+	sleeper := libtimetest.NewSleeperMock(t)
 	defer sleeper.MinimockFinish()
 
 	opts := BackoffOptions{
@@ -89,7 +89,7 @@ func Test_Backoff_first_success(t *testing.T) {
 }
 
 func Test_Backoff_later_success(t *testing.T) {
-	sleeper := libtime.NewSleeperMock(t)
+	sleeper := libtimetest.NewSleeperMock(t)
 	defer sleeper.MinimockFinish()
 
 	invocation := 0
@@ -125,7 +125,7 @@ func Test_Backoff_later_success(t *testing.T) {
 }
 
 func Test_Backoff_giveup_partway(t *testing.T) {
-	sleeper := libtime.NewSleeperMock(t)
+	sleeper := libtimetest.NewSleeperMock(t)
 	defer sleeper.MinimockFinish()
 
 	invocation := 0
@@ -165,7 +165,7 @@ func Test_Backoff_giveup_partway(t *testing.T) {
 }
 
 func Test_Backoff_all_fail(t *testing.T) {
-	sleeper := libtime.NewSleeperMock(t)
+	sleeper := libtimetest.NewSleeperMock(t)
 	defer sleeper.MinimockFinish()
 
 	invocation := 0
@@ -201,7 +201,7 @@ func Test_Backoff_all_fail(t *testing.T) {
 }
 
 func Test_Backoff_jitter(t *testing.T) {
-	sleeper := libtime.NewSleeperMock(t)
+	sleeper := libtimetest.NewSleeperMock(t)
 	defer sleeper.MinimockFinish()
 
 	invocation := 0
