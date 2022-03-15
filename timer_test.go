@@ -8,7 +8,7 @@ import (
 )
 
 func Test_SafeTimer(t *testing.T) {
-	delay := 3 * time.Millisecond
+	const delay = 3 * time.Millisecond
 	start := time.Now()
 
 	timer, stop := SafeTimer(delay)
@@ -18,3 +18,4 @@ func Test_SafeTimer(t *testing.T) {
 	elapsed := time.Since(start)
 	require.GreaterOrEqual(t, int64(elapsed), int64(delay))
 }
+
